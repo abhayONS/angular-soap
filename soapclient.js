@@ -3,17 +3,23 @@
 
  @version: 2.4 - 2007.12.21
  @author: Matteo Casati - http://www.guru4.net/
+ @modified: Darko Kuzmanovski - https://github.com/kuzman
 
  \*****************************************************************************/
 
 function SOAPClientParameters()
 {
   var _pl = new Array();
+  var _sl = new Array();
   this.add = function(name, value)
   {
     _pl[name] = value;
     return this;
-  }
+  };
+  this.addSchema = function(prefix, uri) {
+    _sl[prefix] = uri;
+    return this;
+  };
   this.toXml = function()
   {
     var xml = "";
@@ -25,36 +31,75 @@ function SOAPClientParameters()
         case "number":
         case "boolean":
         case "object":
-          xml += "<" + p + ">" + SOAPClientParameters._serialize(_pl[p]) + "</" + p + ">";
+          xml += SOAPClientParameters._serialize(p, _pl[p]);
           break;
         default:
           break;
       }
     }
     return xml;
+  };
+
+  this.printSchemaList = function() {
+    var list = [];
+
+    for (var prefix in _sl) {
+      if (_sl.hasOwnProperty(prefix)) {
+        list.push('xmlns:' + prefix + '="' + _sl[prefix] + '"');
+      }
+    }
+
+    return list.join(' ');
   }
 }
-SOAPClientParameters._serialize = function(o)
+SOAPClientParameters._serialize = function(t, o)
 {
   var s = "";
   switch(typeof(o))
   {
     case "string":
-      s += o.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); break;
+      if(t !== undefined){
+        s += "<" + t + ">";
+      }
+      s += o.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      if(t !== undefined){
+        s += "</" + t + ">";
+      }
+      break;
     case "number":
     case "boolean":
-      s += o.toString(); break;
+      if(t !== undefined){
+        s += "<" + t + ">";
+      }
+      s += o.toString();
+      if(t !== undefined){
+        s += "</" + t + ">";
+      }
+      break;
     case "object":
+      //	if the object is null just output an empty tag
+      if( o === null )
+      {
+        s += "<" + t + ">";
+        s += "</" + t + ">";
+        break;
+      }
+
       // Date
       if(o.constructor.toString().indexOf("function Date()") > -1)
       {
 
         var year = o.getFullYear().toString();
-        var month = (o.getMonth() + 1).toString(); month = (month.length == 1) ? "0" + month : month;
-        var date = o.getDate().toString(); date = (date.length == 1) ? "0" + date : date;
-        var hours = o.getHours().toString(); hours = (hours.length == 1) ? "0" + hours : hours;
-        var minutes = o.getMinutes().toString(); minutes = (minutes.length == 1) ? "0" + minutes : minutes;
-        var seconds = o.getSeconds().toString(); seconds = (seconds.length == 1) ? "0" + seconds : seconds;
+        var month = (o.getMonth() + 1).toString();
+        month = (month.length == 1) ? "0" + month : month;
+        var date = o.getDate().toString();
+        date = (date.length == 1) ? "0" + date : date;
+        var hours = o.getHours().toString();
+        hours = (hours.length == 1) ? "0" + hours : hours;
+        var minutes = o.getMinutes().toString();
+        minutes = (minutes.length == 1) ? "0" + minutes : minutes;
+        var seconds = o.getSeconds().toString();
+        seconds = (seconds.length == 1) ? "0" + seconds : seconds;
         var milliseconds = o.getMilliseconds().toString();
         var tzminutes = Math.abs(o.getTimezoneOffset());
         var tzhours = 0;
@@ -66,44 +111,63 @@ SOAPClientParameters._serialize = function(o)
         tzminutes = (tzminutes.toString().length == 1) ? "0" + tzminutes.toString() : tzminutes.toString();
         tzhours = (tzhours.toString().length == 1) ? "0" + tzhours.toString() : tzhours.toString();
         var timezone = ((o.getTimezoneOffset() < 0) ? "+" : "-") + tzhours + ":" + tzminutes;
+        if(t !== undefined){
+          s += "<" + t + ">";
+        }
         s += year + "-" + month + "-" + date + "T" + hours + ":" + minutes + ":" + seconds + "." + milliseconds + timezone;
+        if(t !== undefined){
+          s += "</" + t + ">";
+        }
       }
       // Array
       else if(o.constructor.toString().indexOf("function Array()") > -1)
       {
+
+        //s += "<" + t + ">";
         for(var p in o)
         {
           if(!isNaN(p))   // linear array
           {
             (/function\s+(\w*)\s*\(/ig).exec(o[p].constructor.toString());
             var type = RegExp.$1;
-            if (type === "Object"){
-              s += SOAPClientParameters._serialize(o[p]);
-              continue;
-            }
             switch(type)
             {
               case "":
                 type = typeof(o[p]);
               case "String":
-                type = "string"; break;
+                type = "string";
+                break;
               case "Number":
-                type = "int"; break;
+                type = "int";
+                break;
               case "Boolean":
-                type = "bool"; break;
+                type = "bool";
+                break;
               case "Date":
-                type = "DateTime"; break;
+                type = "DateTime";
+                break;
             }
-            s += "<" + type + ">" + SOAPClientParameters._serialize(o[p]) + "</" + type + ">"
+            s += SOAPClientParameters._serialize(t, o[p]);
           }
           else    // associative array
-            s += "<" + p + ">" + SOAPClientParameters._serialize(o[p]) + "</" + p + ">"
+          {
+            SOAPClientParameters._serialize(t, o[p]);
+          }
         }
+        //s += "</" + t + ">";
       }
       // Object or custom function
       else
+      {
+        if(t !== undefined){
+          s += "<" + t + ">";
+        }
         for(var p in o)
-          s += "<" + p + ">" + SOAPClientParameters._serialize(o[p]) + "</" + p + ">";
+          s += SOAPClientParameters._serialize(p, o[p]);
+        if(t !== undefined){
+          s += "</" + t + ">";
+        }
+      }
       break;
     default:
       break; // throw new Error(500, "SOAPClientParameters: type '" + typeof(o) + "' is not supported");
