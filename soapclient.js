@@ -123,7 +123,6 @@ SOAPClientParameters._serialize = function(t, o)
       else if(o.constructor.toString().indexOf("function Array()") > -1)
       {
 
-        //s += "<" + t + ">";
         for(var p in o)
         {
           if(!isNaN(p))   // linear array
@@ -154,7 +153,6 @@ SOAPClientParameters._serialize = function(t, o)
             SOAPClientParameters._serialize(t, o[p]);
           }
         }
-        //s += "</" + t + ">";
       }
       // Object or custom function
       else
