@@ -28,7 +28,7 @@ angular.module('angularSoap', [])
 				}
 
 				// Log conditionnaly the params
-				if (logsActivated === true) {
+				if (logsActivated) {
 					console.log(url, action, params);
 				}
 
