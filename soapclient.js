@@ -178,24 +178,24 @@ function SOAPClient() {}
 SOAPClient.username = null;
 SOAPClient.password = null;
 
-SOAPClient.invoke = function(url, method, parameters, async, callback)
+SOAPClient.invoke = function(url, method, parameters, async, callback, withCredentials)
 {
   if(async)
-    SOAPClient._loadWsdl(url, method, parameters, async, callback);
+    SOAPClient._loadWsdl(url, method, parameters, async, callback, withCredentials);
   else
-    return SOAPClient._loadWsdl(url, method, parameters, async, callback);
+    return SOAPClient._loadWsdl(url, method, parameters, async, callback, withCredentials);
 }
 
 // private: wsdl cache
 SOAPClient_cacheWsdl = new Array();
 
 // private: invoke async
-SOAPClient._loadWsdl = function(url, method, parameters, async, callback)
+SOAPClient._loadWsdl = function(url, method, parameters, async, callback, withCredentials)
 {
   // load from cache?
   var wsdl = SOAPClient_cacheWsdl[url];
   if(wsdl + "" != "" && wsdl + "" != "undefined")
-    return SOAPClient._sendSoapRequest(url, method, parameters, async, callback, wsdl);
+    return SOAPClient._sendSoapRequest(url, method, parameters, async, callback, withCredentials, wsdl);
   // get wsdl
   var xmlHttp = SOAPClient._getXmlHttp();
   xmlHttp.open("GET", url + "?wsdl", async);
@@ -206,20 +206,20 @@ SOAPClient._loadWsdl = function(url, method, parameters, async, callback)
     xmlHttp.onreadystatechange = function()
     {
       if(xmlHttp.readyState == 4)
-        SOAPClient._onLoadWsdl(url, method, parameters, async, callback, xmlHttp);
+        SOAPClient._onLoadWsdl(url, method, parameters, async, callback, withCredentials, xmlHttp);
     }
   }
   xmlHttp.send(null);
   if (!async)
-    return SOAPClient._onLoadWsdl(url, method, parameters, async, callback, xmlHttp);
+    return SOAPClient._onLoadWsdl(url, method, parameters, async, callback, withCredentials, xmlHttp);
 }
-SOAPClient._onLoadWsdl = function(url, method, parameters, async, callback, req)
+SOAPClient._onLoadWsdl = function(url, method, parameters, async, callback, withCredentials, req)
 {
   var wsdl = req.responseXML;
   SOAPClient_cacheWsdl[url] = wsdl;	// save a copy in cache
-  return SOAPClient._sendSoapRequest(url, method, parameters, async, callback, wsdl);
+  return SOAPClient._sendSoapRequest(url, method, parameters, async, callback, withCredentials, wsdl);
 }
-SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback, wsdl)
+SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback, withCredentials, wsdl)
 {
   // get namespace
   var ns = (wsdl.documentElement.attributes["targetNamespace"] + "" == "undefined") ? wsdl.documentElement.attributes.getNamedItem("targetNamespace").nodeValue : wsdl.documentElement.attributes["targetNamespace"].value;
@@ -236,6 +236,9 @@ SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback,
     "</" + method + "></s:Body></s:Envelope>";
   // send request
   var xmlHttp = SOAPClient._getXmlHttp();
+  if(withCredentials){
+    xmlHttp.withCredentials = true;
+  }
   if (SOAPClient.userName && SOAPClient.password){
     xmlHttp.open("POST", url, async, SOAPClient.userName, SOAPClient.password);
     // Some WS implementations (i.e. BEA WebLogic Server 10.0 JAX-WS) don't support Challenge/Response HTTP BASIC, so we send authorization headers in the first request
