@@ -1,3 +1,5 @@
+var withCredentials = false;
+
 angular.module('angularSoap', [])
 
 .provider("$soap", function $soapProvider() {
@@ -10,7 +12,6 @@ angular.module('angularSoap', [])
 	/**
 	 * Call activateCrossSite() to use credentials on cross-site Access-Control requests.
 	 */
-	var withCredentials = false;
 	this.activateCrossSite = function activateCrossSite() {
 		withCredentials = true;
 	}
