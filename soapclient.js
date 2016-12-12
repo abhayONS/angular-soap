@@ -177,6 +177,7 @@ function SOAPClient() {}
 
 SOAPClient.username = null;
 SOAPClient.password = null;
+SOAPClient.useExplicitNameSpace = true;
 
 SOAPClient.invoke = function(url, method, parameters, async, callback)
 {
@@ -230,13 +231,15 @@ SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback,
   var sr =
     //"<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
     "<s:Envelope " +
-    "xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
+    "xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"" +
+    (SOAPClient.useExplicitNameSpace ? " xmlns:ws=\"" + ns + "\"" : "") + ">" +
     "<s:Body " +
     "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
     "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">" +
-    "<" + method + " xmlns=\"" + ns + "\">" +
+    "<" + (SOAPClient.useExplicitNameSpace ? "ws:" : "") + method + (SOAPClient.useExplicitNameSpace ? "" : " xmlns=\"" + ns + "\"") + ">" +
     parameters.toXml() +
-    "</" + method + "></s:Body></s:Envelope>";
+    "</" + (SOAPClient.useExplicitNameSpace ? "ws:" : "") + method + ">" +
+    "</s:Body></s:Envelope>";
   // send request
   var xmlHttp = SOAPClient._getXmlHttp();
   xmlHttp.withCredentials = withCredentials;

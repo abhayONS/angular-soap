@@ -3,6 +3,8 @@ angular-soap
 
 An Angular port of a <a href="http://javascriptsoapclient.codeplex.com/">JavaScript SOAP Client</a> into a factory that has a similar syntax to $http.
 
+By default this module uses explicit namespaces for methods.
+
 # Usage
 Before using the factory, you must import the two scripts and its module:
 
@@ -51,7 +53,6 @@ A basic "Hello World" with no parameters.
 
 ``` javascript
 angular.module('myApp', ['angularSoap'])
-
 .factory("testService", ['$soap',function($soap){
 	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
 
@@ -63,7 +64,6 @@ angular.module('myApp', ['angularSoap'])
 }])
 
 .controller('MainCtrl', function($scope, testService) {
-
   testService.HelloWorld().then(function(response){
 	$scope.response = response;
   });
@@ -77,7 +77,6 @@ A basic method call with parameters.
 
 ``` javascript
 angular.module('myApp', ['angularSoap'])
-
 .factory("testService", ['$soap',function($soap){
 	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
 
@@ -89,7 +88,6 @@ angular.module('myApp', ['angularSoap'])
 }])
 
 .controller('MainCtrl', function($scope, testService) {
-
   testService.CreateUser($scope.firstName, $scope.lastName).then(function(response){
 	$scope.response = response;
   });
@@ -103,7 +101,6 @@ A basic method call to get a single object.
 
 ``` javascript
 angular.module('myApp', ['angularSoap'])
-
 .factory("testService", ['$soap',function($soap){
 	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
 
@@ -115,7 +112,6 @@ angular.module('myApp', ['angularSoap'])
 }])
 
 .controller('MainCtrl', function($scope, testService) {
-
   testService.GetUser($scope.id).then(function(user){
 	console.log(user.firstName);
 	console.log(user.lastName);
@@ -130,7 +126,6 @@ A basic method call to get a collection of objects.
 
 ``` javascript
 angular.module('myApp', ['angularSoap'])
-
 .factory("testService", ['$soap',function($soap){
 	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
 
@@ -142,7 +137,6 @@ angular.module('myApp', ['angularSoap'])
 }])
 
 .controller('MainCtrl', function($scope, testService) {
-
   testService.GetUsers().then(function(users){
 	for(i=0;i<users.length;i++){
 		console.log(users[i].firstName);
@@ -159,7 +153,6 @@ Set the credentials for the connection before sending any requests.
 
 ``` javascript
 angular.module('myApp', ['angularSoap'])
-
 .factory("testService", ['$soap',function($soap){
 	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
 	
@@ -173,7 +166,6 @@ angular.module('myApp', ['angularSoap'])
 }])
 
 .controller('MainCtrl', function($scope, testService) {
-
   testService.GetUsers().then(function(users){
 	for(i=0;i<users.length;i++){
 		console.log(users[i].firstName);
@@ -181,6 +173,33 @@ angular.module('myApp', ['angularSoap'])
 	}
   });
   
+})
+
+```
+
+# Example 6: Do not use explicit namespace
+``` javascript
+angular.module('myApp', ['angularSoap'])
+.factory("testService", ['$soap',function($soap){
+	var base_url = "http://www.cooldomain.com/SoapTest/webservicedemo.asmx";
+
+	$soap.useExplicitNameSpace(false);
+
+	return {
+		GetUsers: function(){
+			return $soap.post(base_url,"GetUsers");
+		}
+	}
+}])
+
+.controller('MainCtrl', function($scope, testService) {
+  testService.GetUsers().then(function(users){
+	for(i=0;i<users.length;i++){
+		console.log(users[i].firstName);
+		console.log(users[i].lastName);
+	}
+  });
+
 })
 
 ```
