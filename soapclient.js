@@ -199,6 +199,7 @@ SOAPClient._loadWsdl = function(url, method, parameters, async, callback)
     return SOAPClient._sendSoapRequest(url, method, parameters, async, callback, wsdl);
   // get wsdl
   var xmlHttp = SOAPClient._getXmlHttp();
+  xmlHttp.addEventListener("error", callback);
   xmlHttp.open("GET", url + "?wsdl", async);
   xmlHttp.withCredentials = true;
   xmlHttp.setRequestHeader("Access-Control-Allow-Origin", "*");
@@ -242,6 +243,7 @@ SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback,
     "</s:Body></s:Envelope>";
   // send request
   var xmlHttp = SOAPClient._getXmlHttp();
+  xmlHttp.addEventListener("error", callback);
   xmlHttp.withCredentials = withCredentials;
   if (SOAPClient.userName && SOAPClient.password){
     xmlHttp.open("POST", url, async, SOAPClient.userName, SOAPClient.password);
