@@ -41,7 +41,11 @@ angular.module('angularSoap', [])
 					console.log(url, action, params);
 				}
 
-				SOAPClient.invoke(url, action, soapParams, true, soapCallback);
+				try {
+					SOAPClient.invoke(url, action, soapParams, true, soapCallback);
+				} catch (ex) {
+					deferred.reject(ex);
+				}
 
 				return deferred.promise;
 			},
